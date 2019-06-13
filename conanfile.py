@@ -31,6 +31,7 @@ class CairoConan(ConanFile):
 
     def requirements(self):
         if self.options.enable_ft:
+            self.requires("fontconfig/2.13.1@conan/stable")
             self.requires("freetype/2.9.1@appimage-conan-community/stable")
 
         self.requires("zlib/1.2.11@conan/stable")
@@ -103,13 +104,14 @@ class CairoConan(ConanFile):
             tools.replace_in_file(os.path.join('test', 'Makefile.am'), 'noinst_PROGRAMS = cairo-test-suite$(EXEEXT)',
                                   '')
             os.makedirs('pkgconfig')
-            for lib in ['libpng', 'zlib', 'pixman']:
+            for lib in self.deps_cpp_info.deps:
                 self.copy_pkg_config(lib)
 
             if self.options.enable_ft:
-                self.copy_pkg_config('freetype')
-                tools.replace_in_file(os.path.join(self.source_folder, self._source_subfolder, "src", "cairo-ft-font.c"),
-                                      '#if HAVE_UNISTD_H', '#ifdef HAVE_UNISTD_H')
+                tools.replace_in_file(
+                    os.path.join(self.source_folder, self._source_subfolder, "src", "cairo-ft-font.c"),
+                    '#if HAVE_UNISTD_H', '#ifdef HAVE_UNISTD_H'
+                )
 
             pkg_config_path = os.path.abspath('pkgconfig')
             pkg_config_path = tools.unix_path(pkg_config_path) if self.settings.os == 'Windows' else pkg_config_path
